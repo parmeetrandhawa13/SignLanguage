@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign Language Recognition</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        :root {
+            --primary: #4361ee;
+            --secondary: #9dc7cc;
+            --accent: #4cc9f0;
+            --light: #f8f9fa;
+            --dark: #212529;
+            --success: #4ade80;
+            --warning: #fbbf24;
+        }
+
+        body {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            color: var(--dark);
+            line-height: 1.6;
+        }
+
+        header {
+            background: linear-gradient(to right, var(--primary), var(--secondary));
+            color: white;
+            padding: 2rem 0;
+            text-align: center;
+            box-shadow: 0 4px 12px rgba(41, 103, 225, 0.1);
+        }
+
+        .logo {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .logo i {
+            color: var(--accent);
+        }
+
+        .tagline {
+            font-size: 1.2rem;
+            opacity: 0.9;
+            margin-bottom: 1rem;
+            color: #e0e8eb;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .hero {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 2rem;
+            margin: 3rem 0;
+            background: white;
+            border-radius: 20px;
+            padding: 2rem;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+        }
+
+        .hero-content {
+            flex: 1;
+            min-width: 300px;
+        }
+
+        .hero-image {
+            flex: 1;
+            min-width: 300px;
+            text-align: center;
+        }
+
+        .hero-image img {
+            max-width: 100%;
+            border-radius: 15px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            font-size: 2.8rem;
+            margin-bottom: 1rem;
+            background: linear-gradient(to right, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+
+        h2 {
+            font-size: 2rem;
+            margin-bottom: 1.5rem;
+            color: var(--secondary);
+        }
+
+        h3 {
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+            color: var(--primary);
+        }
+
+        p {
+            margin-bottom: 1.5rem;
+            font-size: 1.1rem;
+            color: #555;
+        }
+
+        .highlight {
+            color: var(--primary);
+            font-weight: 600;
+        }
+
+        .features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin: 3rem 0;
+        }
+
+        .feature-card {
+            background: white;
+            border-radius: 15px;
+            padding: 2rem;
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        .feature-icon {
+            font-size: 3rem;
+            color: var(--primary);
+            margin-bottom: 1rem;
+        }
+
+        .prediction-section {
+            background: linear-gradient(to right, var(--primary), var(--secondary));
+            color: white;
+            padding: 3rem 2rem;
+            border-radius: 20px;
+            text-align: center;
+            margin: 3rem 0;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        .prediction-box {
+            background: rgba(226, 230, 233, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 2rem;
+            display: inline-block;
+            margin: 1.5rem 0;
+            color: #a2d3e2;
+        }
+
+        .prediction-letter {
+            font-size: 8rem;
+            font-weight: 700;
+            color: #b4d4e8;
+            text-shadow: 0 5px 15px rgba(165, 183, 187, 0.2);
+        }
+
+        .benefits {
+            background: white;
+            border-radius: 20px;
+            padding: 3rem;
+            margin: 3rem 0;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+        }
+
+        .benefit-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-top: 2rem;
+        }
+
+        .benefit-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 1rem;
+        }
+
+        .benefit-icon {
+            color: var(--success);
+            font-size: 1.5rem;
+            margin-top: 0.2rem;
+        }
+
+        .cta-section {
+            text-align: center;
+            padding: 4rem 2rem;
+            background: linear-gradient(135deg, var(--accent) 0%, var(--primary) 100%);
+            color: white;
+            border-radius: 20px;
+            margin: 3rem 0;
+        }
+
+        .btn {
+            display: inline-block;
+            background: var(--warning);
+            color: var(--dark);
+            padding: 1rem 2.5rem;
+            border-radius: 50px;
+            font-size: 1.2rem;
+            font-weight: 600;
+            text-decoration: none;
+            margin: 0.75rem;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .btn:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+            background: #fcd34d;
+        }
+
+        .runtime-note {
+            color: #eaf6ff;
+            max-width: 820px;
+            margin: 1.5rem auto 0;
+        }
+
+        footer {
+            text-align: center;
+            padding: 2rem;
+            background: var(--dark);
+            color: white;
+            margin-top: 3rem;
+        }
+
+        footer p {
+            color: white;
+            margin: 0;
+        }
+
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 2.2rem;
+            }
+
+            h2 {
+                font-size: 1.8rem;
+            }
+
+            .prediction-letter {
+                font-size: 6rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <div class="logo">
+                <i class="fas fa-hands"></i>
+                <span>SignLanguage Recognition</span>
+            </div>
+            <p class="tagline">Real-time hand gesture detection with Python</p>
+        </div>
+    </header>
+
+    <div class="container">
+        <section class="hero">
+            <div class="hero-content">
+                <h1>Sign Language Recognition</h1>
+                <p>Our AI-powered system supports real-time sign language detection and translation with a simple browser-based workflow.</p>
+                <p>Sign up to access the live dashboard, connect your camera, and inspect model predictions from one place.</p>
+            </div>
+            <div class="hero-image">
+                <div style="background: linear-gradient(135deg, var(--accent), var(--primary)); height: 300px; border-radius: 15px; display: flex; align-items: center; justify-content: center; color: white; font-size: 1.5rem;">
+                    <i class="fas fa-sign-language" style="font-size: 8rem; opacity: 0.7;"></i>
+                </div>
+            </div>
+        </section>
+
+        <section class="features">
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-bolt"></i>
+                </div>
+                <h3>Real-time Detection</h3>
+                <p>Process hand gestures with low latency for a responsive translation workflow.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-brain"></i>
+                </div>
+                <h3>AI-Powered</h3>
+                <p>Use machine learning models trained on sign language examples to classify detected gestures.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-globe"></i>
+                </div>
+                <h3>Accessible</h3>
+                <p>Keep the recognition experience in a local web app so it is easy to run and test.</p>
+            </div>
+        </section>
+
+        <section class="prediction-section">
+            <h2>Live Prediction</h2>
+            <p>The dashboard streams the camera feed and the latest prediction status in real time.</p>
+            <div class="prediction-box">
+                <div class="prediction-letter">A</div>
+                <p>Example prediction</p>
+            </div>
+            <p>When the ML runtime is unavailable, the app now stays online and shows a clear status message instead of crashing.</p>
+        </section>
+
+        <section class="benefits">
+            <h2>Increase your Cognitive Brain Power with SLR</h2>
+            <p>Learning sign language exercises memory, spatial awareness, and communication skills while helping you engage with a wider community.</p>
+
+            <div class="benefit-list">
+                <div class="benefit-item">
+                    <i class="fas fa-brain benefit-icon"></i>
+                    <div>
+                        <h3>Boost Cognitive Function</h3>
+                        <p>Learning sign language enhances memory, spatial awareness, and creative thinking.</p>
+                    </div>
+                </div>
+                <div class="benefit-item">
+                    <i class="fas fa-heart benefit-icon"></i>
+                    <div>
+                        <h3>Stay Mentally Active</h3>
+                        <p>Keep your mind sharp as you age by learning this visual-spatial language.</p>
+                    </div>
+                </div>
+                <div class="benefit-item">
+                    <i class="fas fa-users benefit-icon"></i>
+                    <div>
+                        <h3>Connect with Millions</h3>
+                        <p>Communicate with sign language speakers around the world.</p>
+                    </div>
+                </div>
+                <div class="benefit-item">
+                    <i class="fas fa-gamepad benefit-icon"></i>
+                    <div>
+                        <h3>Fun Learning Experience</h3>
+                        <p>Practice in an interactive way while improving your fluency and confidence.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="cta-section">
+            <h2>Ready to Start Your Sign Language Journey?</h2>
+            <p>Use the local app to create an account, sign in, and open the dashboard.</p>
+            <a href="/login" class="btn">Login</a>
+            <a href="/signup" class="btn">Sign Up</a>
+            {% if not runtime.available %}
+            <p class="runtime-note">{{ runtime.message }}</p>
+            {% endif %}
+        </section>
+    </div>
+
+    <footer>
+        <p>&copy; 2026 SignLanguageAI. All rights reserved.</p>
+    </footer>
+</body>
+</html>

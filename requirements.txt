@@ -1,0 +1,9 @@
+Flask==3.0.3
+mediapipe==0.10.9
+numpy==1.26.4
+opencv-python==4.9.0.80
+pillow==10.3.0
+protobuf==3.20.3
+requests==2.32.4
+scikit-learn==1.4.0
+tensorflow==2.15.0

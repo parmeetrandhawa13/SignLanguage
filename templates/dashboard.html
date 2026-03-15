@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Sign Language Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: #f5f7fa;
+            font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .navbar {
+            background-color: #4a90e2;
+        }
+        .navbar-brand,
+        .navbar-nav .nav-link {
+            color: white !important;
+        }
+        .card {
+            border-radius: 15px;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+        }
+        .video-container {
+            text-align: center;
+        }
+        .prediction-box {
+            margin-top: 20px;
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #fff;
+            background-color: #4a90e2;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+        }
+        .status-box {
+            margin-top: 20px;
+            padding: 16px;
+            border-radius: 10px;
+            background: #fff3cd;
+            color: #664d03;
+            border: 1px solid #ffecb5;
+        }
+    </style>
+</head>
+<body>
+<nav class="navbar navbar-expand-lg">
+    <div class="container-fluid">
+        <a class="navbar-brand" href="#">Sign Language App</a>
+        <div class="collapse navbar-collapse justify-content-end">
+            <ul class="navbar-nav">
+                <li class="nav-item"><span class="nav-link">Hello, {{ user }}</span></li>
+                <li class="nav-item"><a class="nav-link btn btn-light text-primary" href="{{ url_for('logout') }}">Logout</a></li>
+            </ul>
+        </div>
+    </div>
+</nav>
+
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card p-4 mb-4">
+                <h3 class="card-title text-center mb-3">Live Hand Feed</h3>
+                {% if runtime.available %}
+                <div class="video-container">
+                    <img src="{{ url_for('video_feed') }}" class="img-fluid rounded" alt="Live Feed">
+                </div>
+                {% else %}
+                <div class="status-box">
+                    {{ runtime.message }}
+                </div>
+                {% endif %}
+                <div class="prediction-box mt-4">
+                    Prediction: <span id="prediction">{{ prediction }}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    const predictionElement = document.getElementById("prediction");
+    const evtSource = new EventSource("{{ url_for('prediction_feed') }}");
+
+    evtSource.onmessage = function(event) {
+        const parts = event.data.split("|");
+        predictionElement.textContent = parts[0];
+    };
+</script>
+</body>
+</html>

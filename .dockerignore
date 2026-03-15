@@ -1,0 +1,17 @@
+venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+build/
+dist/
+output/
+logs/
+asl_dataset/
+dataset/
+app_data/
+database/
+*.db-journal
+*.log
+app.spec
