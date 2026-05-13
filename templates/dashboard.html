@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sign Language Dashboard</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
@@ -20,17 +21,35 @@
             border-radius: 15px;
             box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
         }
-        .video-container {
-            text-align: center;
+        .video-shell {
+            background: #0f172a;
+            border-radius: 18px;
+            overflow: hidden;
+            position: relative;
+            aspect-ratio: 4 / 3;
+        }
+        video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transform: scaleX(-1);
+            display: block;
+        }
+        .camera-overlay {
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            border: 2px solid rgba(255, 255, 255, 0.18);
+            border-radius: 18px;
         }
         .prediction-box {
             margin-top: 20px;
             font-size: 1.5rem;
-            font-weight: bold;
+            font-weight: 700;
             color: #fff;
             background-color: #4a90e2;
-            padding: 15px;
-            border-radius: 10px;
+            padding: 18px;
+            border-radius: 12px;
             text-align: center;
         }
         .status-box {
@@ -40,6 +59,17 @@
             background: #fff3cd;
             color: #664d03;
             border: 1px solid #ffecb5;
+        }
+        .confidence {
+            margin-top: 12px;
+            color: #334155;
+            font-size: 1rem;
+            text-align: center;
+        }
+        .helper-text {
+            color: #475569;
+            text-align: center;
+            margin-top: 14px;
         }
     </style>
 </head>
@@ -62,16 +92,26 @@
             <div class="card p-4 mb-4">
                 <h3 class="card-title text-center mb-3">Live Hand Feed</h3>
                 {% if runtime.available %}
-                <div class="video-container">
-                    <img src="{{ url_for('video_feed') }}" class="img-fluid rounded" alt="Live Feed">
+                <div class="video-shell">
+                    <video id="camera-preview" autoplay playsinline muted></video>
+                    <div class="camera-overlay"></div>
                 </div>
+                <canvas id="capture-canvas" width="640" height="480" hidden></canvas>
+                <p class="helper-text" id="camera-status">Starting camera...</p>
                 {% else %}
                 <div class="status-box">
                     {{ runtime.message }}
                 </div>
                 {% endif %}
+
                 <div class="prediction-box mt-4">
-                    Prediction: <span id="prediction">{{ prediction }}</span>
+                    Prediction: <span id="prediction">Waiting...</span>
+                </div>
+                <div class="confidence">
+                    Confidence: <span id="confidence">0.00</span>
+                </div>
+                <div class="helper-text" id="prediction-status">
+                    Show one hand clearly inside the camera frame.
                 </div>
             </div>
         </div>
@@ -80,13 +120,93 @@
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 <script>
-    const predictionElement = document.getElementById("prediction");
-    const evtSource = new EventSource("{{ url_for('prediction_feed') }}");
+    const runtimeAvailable = {{ "true" if runtime.available else "false" }};
 
-    evtSource.onmessage = function(event) {
-        const parts = event.data.split("|");
-        predictionElement.textContent = parts[0];
-    };
+    if (runtimeAvailable) {
+        const video = document.getElementById("camera-preview");
+        const canvas = document.getElementById("capture-canvas");
+        const ctx = canvas.getContext("2d");
+        const predictionElement = document.getElementById("prediction");
+        const confidenceElement = document.getElementById("confidence");
+        const cameraStatus = document.getElementById("camera-status");
+        const predictionStatus = document.getElementById("prediction-status");
+
+        let predictionHistory = [];
+        let isSending = false;
+        let streamStarted = false;
+
+        async function startCamera() {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({
+                    video: {
+                        facingMode: "user",
+                        width: { ideal: 640 },
+                        height: { ideal: 480 }
+                    },
+                    audio: false
+                });
+
+                video.srcObject = stream;
+                await video.play();
+                streamStarted = true;
+                cameraStatus.textContent = "Camera is live.";
+            } catch (error) {
+                cameraStatus.textContent = "Camera access failed. Allow camera permission and refresh.";
+                predictionStatus.textContent = error.message;
+            }
+        }
+
+        async function sendFrame() {
+            if (!streamStarted || isSending || video.readyState < 2) {
+                return;
+            }
+
+            isSending = true;
+
+            try {
+                ctx.save();
+                ctx.scale(-1, 1);
+                ctx.drawImage(video, -canvas.width, 0, canvas.width, canvas.height);
+                ctx.restore();
+
+                const frame = canvas.toDataURL("image/jpeg", 0.8);
+                const response = await fetch("{{ url_for('predict_frame_route') }}", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        frame,
+                        history: predictionHistory
+                    })
+                });
+
+                const data = await response.json();
+
+                if (!response.ok || !data.ok) {
+                    predictionStatus.textContent = data.message || "Prediction failed.";
+                    if (data.prediction) {
+                        predictionElement.textContent = data.prediction;
+                    }
+                    confidenceElement.textContent = "0.00";
+                    return;
+                }
+
+                predictionHistory = Array.isArray(data.history) ? data.history : [];
+                predictionElement.textContent = data.prediction;
+                confidenceElement.textContent = Number(data.confidence || 0).toFixed(2);
+                predictionStatus.textContent = data.message || "Prediction updated.";
+            } catch (error) {
+                predictionStatus.textContent = "Prediction request failed. " + error.message;
+            } finally {
+                isSending = false;
+            }
+        }
+
+        startCamera().then(() => {
+            setInterval(sendFrame, 450);
+        });
+    }
 </script>
 </body>
 </html>
