@@ -12,7 +12,6 @@ RUN pip install --no-cache-dir -r requirements.deploy.txt
 
 COPY app.py wsgi.py ./
 COPY templates ./templates
-COPY static ./static
 COPY models ./models
 
 EXPOSE 5000
